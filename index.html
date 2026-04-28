@@ -96,9 +96,9 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
 .bcol{padding:12px;display:flex;flex-direction:column;border-right:1px solid var(--bd);}
 .bcol:last-child{border-right:none;}
 .bcol:nth-child(1){background:var(--sf);}
-.bcol:nth-child(2){background:#FFF8F8;}
-.bcol:nth-child(3){background:#F5F8FF;}
-.bcol:nth-child(4){background:#F5FBF5;}
+.bcol:nth-child(2){background:var(--sf);}
+.bcol:nth-child(3){background:var(--sf);}
+.bcol:nth-child(4){background:var(--sf);}
 .chd{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
 .cdot{width:8px;height:8px;border-radius:50%;}
 .clbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;flex:1;}
@@ -109,27 +109,29 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
 .dz.dov{background:var(--gl);outline:2px dashed var(--gm);}
 
 /* task card */
-.tc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r8);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s,border-color .15s,transform .1s;}
-.tc:hover{box-shadow:var(--sm);border-color:var(--gm);transform:translateY(-1px);}
+.tc{background:var(--sf);border:1px solid #EBECF0;border-radius:var(--r8);padding:14px 14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:0;box-shadow:0 1px 2px rgba(9,30,66,.08);transition:box-shadow .15s,transform .1s;}
+.tc:hover{box-shadow:0 4px 14px rgba(9,30,66,.15);transform:translateY(-1px);}
 .tc.dragging{opacity:.4;transform:rotate(2deg);}
 .tc.hidden{display:none;}
-.tc-top{display:flex;align-items:flex-start;gap:6px;}
-.tc-type{flex-shrink:0;margin-top:1px;}
-.tc-type svg{width:13px;height:13px;}
-.tc-title{font-size:12px;font-weight:500;color:var(--t);line-height:1.45;flex:1;}
-.tc-mid{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.tc-id{font-family:var(--mo);font-size:10px;color:var(--t3);}
-.tc-pri{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;}
-.tc-sp{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;background:var(--gl);color:var(--gd);font-family:var(--mo);}
-.tc-bot{display:flex;align-items:center;gap:5px;}
+.tc-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;}
+.tc-type{flex-shrink:0;margin-top:2px;}
+.tc-type svg{width:14px;height:14px;}
+.tc-title{font-size:14px;font-weight:500;color:#172B4D;line-height:1.5;flex:1;}
+.tc-epic-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;margin-bottom:10px;letter-spacing:.03em;text-transform:uppercase;align-self:flex-start;}
+.tc-bot{display:flex;align-items:center;gap:6px;margin-top:2px;}
+.tc-id{font-family:var(--mo);font-size:11px;font-weight:600;color:#5E6C84;}
+.tc-sp{min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#F4F5F7;border:1px solid #DFE1E6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#42526E;font-family:var(--mo);}
+.tc-pri{font-size:14px;line-height:1;font-weight:700;}
 .tc-due{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:3px;}
 .tc-due.overdue{color:var(--red);}
 .tc-due.soon{color:var(--ora);}
-.tc-cmt{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:3px;margin-left:auto;}
-.tc-av{width:22px;height:22px;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-left:auto;}
-.pri-high{background:#FFEBE6;color:#BF2600;}
-.pri-medium{background:#FFFAE6;color:#974F0C;}
-.pri-low{background:#F4F5F7;color:#5E6C84;}
+.tc-cmt{font-size:10px;color:var(--t3);display:flex;align-items:center;gap:3px;}
+.tc-av{width:28px;height:28px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-left:auto;box-shadow:0 0 0 2px #fff;}
+.pri-high{color:#DE350B;}
+.pri-medium{color:#FF8B00;}
+.pri-low{color:#0065FF;}
+/* kept for save-changes refresh compat */
+.pri-h{color:#DE350B;}.pri-m{color:#FF8B00;}.pri-l{color:#0065FF;}
 
 /* ══════════════════════════════
    BACKLOG VIEW
@@ -872,14 +874,28 @@ function buildSection(pn){
 }
 
 function buildCard(t,pn){
-  const pr=PR[t.priority]||PR.Medium;const mc=MC[t.assignee]||{bg:'#F4F5F7',txt:'#5E6C84'};
+  const mc=MC[t.assignee]||{bg:'#F4F5F7',txt:'#5E6C84'};
   const dc=dueCls(t.due);const dl=fmtDue(t.due);const cc=(t.comments||[]).length;
+  const p=PROJ[pn];
+  // Priority arrow icons
+  const priIcons={High:'⬆⬆',Medium:'=',Low:'⬇'};
+  const priCls={High:'pri-high',Medium:'pri-medium',Low:'pri-low'};
   const d=document.createElement('div');
   d.className='tc';d.draggable=true;d.dataset.id=t.id;d.dataset.assignee=t.assignee;d.dataset.proj=pn;
-  d.innerHTML=`<div class="tc-top"><span class="tc-type">${TICONS[t.type]||TICONS.Task}</span><span class="tc-title">${t.title}</span></div>
-<div class="tc-mid"><span class="tc-id">${t.id}</span><span class="tc-pri pri-${t.priority.toLowerCase()}">${t.priority}</span><span class="tc-sp">${t.sp} SP</span></div>
-<div class="tc-bot">${dl?`<span class="tc-due ${dc}"><svg width="10" height="10" viewBox="0 0 14 14"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 1v2M9 1v2M1 5h12" stroke="currentColor" stroke-width="1.4"/></svg>${dl}</span>`:''}${cc?`<span class="tc-cmt"><svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 2h10a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>${cc}</span>`:''}
-<span class="tc-av" style="background:${mc.bg};color:${mc.txt};" title="${t.assignee}">${t.assignee.slice(0,2).toUpperCase()}</span></div>`;
+  d.innerHTML=`
+<div class="tc-top">
+  <span class="tc-type">${TICONS[t.type]||TICONS.Task}</span>
+  <span class="tc-title">${t.title}</span>
+</div>
+<div style="margin-bottom:10px;"><span class="tc-epic-tag" style="background:${mc.bg};color:${mc.txt};">${t.assignee.toUpperCase()}</span></div>
+<div class="tc-bot">
+  <span class="tc-id">${t.id}</span>
+  <span class="tc-sp">${t.sp}</span>
+  <span class="tc-pri ${priCls[t.priority]||'pri-medium'}">${priIcons[t.priority]||'='}</span>
+  ${dl?`<span class="tc-due ${dc}"><svg width="10" height="10" viewBox="0 0 14 14"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 1v2M9 1v2M1 5h12" stroke="currentColor" stroke-width="1.4"/></svg>${dl}</span>`:''}
+  ${cc?`<span class="tc-cmt"><svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 2h10a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>${cc}</span>`:''}
+  <span class="tc-av" style="background:${mc.bg};color:${mc.txt};" title="${t.assignee}">${t.assignee.slice(0,2).toUpperCase()}</span>
+</div>`;
   d.addEventListener('dragstart',e=>{drag=d;d.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
   d.addEventListener('dragend',()=>{d.classList.remove('dragging');const nc=d.parentElement&&d.parentElement.dataset.col;if(nc)tState[t.id]=nc;drag=null;updateCounts(pn);updateProgress(pn);updateSprintStats();});
   d.addEventListener('click',()=>{if(!drag)openEdit(t.id);});
@@ -1293,8 +1309,12 @@ document.getElementById('em-send').addEventListener('click',()=>{
   const card=document.querySelector(`.tc[data-id="${curEditId}"]`);
   if(card){
     let cmt=card.querySelector('.tc-cmt');const bot=card.querySelector('.tc-bot');
-    if(cmt){cmt.lastChild.textContent=t.comments.length;}
-    else{const s=document.createElement('span');s.className='tc-cmt';s.innerHTML=`<svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 2h10a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>${t.comments.length}`;const av=bot.querySelector('.tc-av');bot.insertBefore(s,av);}
+    if(cmt){cmt.querySelector('svg').nextSibling.textContent=t.comments.length;}
+    else if(bot){
+      const s=document.createElement('span');s.className='tc-cmt';
+      s.innerHTML=`<svg width="10" height="10" viewBox="0 0 14 14"><path d="M2 2h10a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>${t.comments.length}`;
+      const av=bot.querySelector('.tc-av');bot.insertBefore(s,av);
+    }
   }
   toast('Comment posted');
 });
@@ -1315,12 +1335,16 @@ document.getElementById('em-save').addEventListener('click',()=>{
     if(card){const nz=document.querySelector(`.dz[data-col="${newStatus}"][data-proj="${pn}"]`);if(nz)nz.appendChild(card);}
     updateCounts(pn);updateProgress(pn);updateSprintStats();
   }
-  // refresh card
+  // refresh card visuals
   const card=document.querySelector(`.tc[data-id="${curEditId}"]`);
   if(card){
-    const priEl=card.querySelector('.tc-pri');if(priEl){priEl.className=`tc-pri pri-${newPri.toLowerCase()}`;priEl.textContent=newPri;}
-    const spEl=card.querySelector('.tc-sp');if(spEl)spEl.textContent=newSP+' SP';
-    const dueEl=card.querySelector('.tc-due');if(dueEl){const dc=dueCls(newDue);const dl=fmtDue(newDue);dueEl.className=`tc-due ${dc}`;dueEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 14 14"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 1v2M9 1v2M1 5h12" stroke="currentColor" stroke-width="1.4"/></svg>${dl}`;}
+    const priIcons={High:'⬆⬆',Medium:'=',Low:'⬇'};
+    const priCls={High:'pri-high',Medium:'pri-medium',Low:'pri-low'};
+    const priEl=card.querySelector('.tc-pri');
+    if(priEl){priEl.className=`tc-pri ${priCls[newPri]||'pri-medium'}`;priEl.textContent=priIcons[newPri]||'=';}
+    const spEl=card.querySelector('.tc-sp');if(spEl)spEl.textContent=newSP;
+    const dueEl=card.querySelector('.tc-due');
+    if(dueEl){const dc=dueCls(newDue);const dl=fmtDue(newDue);dueEl.className=`tc-due ${dc}`;dueEl.innerHTML=`<svg width="10" height="10" viewBox="0 0 14 14"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 1v2M9 1v2M1 5h12" stroke="currentColor" stroke-width="1.4"/></svg>${dl}`;}
     const typeEl=card.querySelector('.tc-type');if(typeEl)typeEl.innerHTML=TICONS[newType]||TICONS.Task;
   }
   toast('✓ Task updated');
