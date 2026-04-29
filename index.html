@@ -342,6 +342,14 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
 .toast-item.error{background:var(--red);}
 @keyframes tf{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
+.pboard.collapsed{display:none;}
+.collapse-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3);padding:0 3px;line-height:1;border-radius:4px;transition:.15s;user-select:none;}
+.collapse-btn:hover{background:var(--sf3);color:var(--t);}
+.ep-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.ep-pill{font-size:11px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--bd);font-weight:600;display:inline-flex;align-items:center;gap:5px;user-select:none;transition:.15s;}
+.ep-pill.active{opacity:1;}
+.ep-pill.inactive{opacity:.28;}
+.ep-pill-all{background:var(--sf2);color:var(--t2);border-color:var(--bd2);}
 /* scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px;}
@@ -408,6 +416,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
       </div>
     </div>
     <div id="filter-row"><span class="fr-lbl">Assignee</span></div>
+    <div class="ep-filter-row" id="ep-filter-row"><span class="fr-lbl">Epic</span></div>
     <div id="bw"></div>
   </div>
 
@@ -430,14 +439,6 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
       </select>
       <select class="bl-filter-sel" id="bl-assignee-filter">
         <option value="">All Assignees</option>
-        <option>Saad Al-Ghanem</option>
-        <option>Ibrahim Hakami</option>
-        <option>Ali Al-Nakhli</option>
-        <option>Alhussain Al-Hazmi</option>
-        <option>Abdulrahman</option>
-        <option>Abdulelah Alsharif</option>
-        <option>Majed Kurdi</option>
-        <option>Albaraa Alaaullah</option>
       </select>
     </div>
     <div id="bl-epics"></div>
@@ -510,6 +511,9 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
 
 </div><!-- /page -->
 
+<!-- TOAST CONTAINER -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+
 <!-- CREATE TASK MODAL -->
 <div class="ov" id="cmd">
   <div class="md">
@@ -533,8 +537,6 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
           <label class="cm-lbl">Project / Epic <span class="req">*</span></label>
           <select class="cm-sel" id="cm-proj">
             <option value="">— Select —</option>
-            <option>Inactive POS</option><option>Branch Pick-up</option>
-            <option>IT Projects</option><option>Profitability</option>
           </select>
         </div>
         <div class="cm-f">
@@ -564,14 +566,6 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
           <label class="cm-lbl">Assignee <span class="req">*</span></label>
           <select class="cm-sel" id="cm-assignee">
             <option value="">— Select —</option>
-            <option>Saad Al-Ghanem</option>
-            <option>Ibrahim Hakami</option>
-            <option>Ali Al-Nakhli</option>
-            <option>Alhussain Al-Hazmi</option>
-            <option>Abdulrahman</option>
-            <option>Abdulelah Alsharif</option>
-            <option>Majed Kurdi</option>
-            <option>Albaraa Alaaullah</option>
           </select>
         </div>
         <div class="cm-f">
@@ -879,7 +873,6 @@ document.querySelectorAll('.sb-tab[data-view]').forEach(tab=>{
 // ═══════════════════════════════════════
 function buildFilterRow(){
   const row=document.getElementById('filter-row');
-  // remove old pills, keep the label
   while(row.children.length>1) row.removeChild(row.lastChild);
   const gm=new Set(allTasks().map(t=>t.assignee));
   [...new Set(allTasks().map(t=>t.assignee))].forEach(m=>{
@@ -900,15 +893,88 @@ function buildFilterRow(){
   });
 }
 
+function buildEpicFilter(){
+  const row=document.getElementById('ep-filter-row');
+  if(!row)return;
+  while(row.children.length>1)row.removeChild(row.lastChild);
+  const activeEpics=new Set(Object.keys(PROJ));
+  // "All" pill
+  const allPill=document.createElement('span');
+  allPill.className='ep-pill ep-pill-all active';allPill.textContent='All Epics';
+  allPill.addEventListener('click',()=>{
+    const allActive=[...document.querySelectorAll('.ep-pill:not(.ep-pill-all)')].every(p=>p.classList.contains('active'));
+    if(allActive){
+      // collapse all
+      document.querySelectorAll('.ep-pill:not(.ep-pill-all)').forEach(p=>{p.classList.replace('active','inactive');});
+      allPill.classList.replace('active','inactive');
+      document.querySelectorAll('#bw .psec').forEach(s=>s.style.display='none');
+    } else {
+      // expand all
+      document.querySelectorAll('.ep-pill').forEach(p=>{p.classList.remove('inactive');p.classList.add('active');});
+      document.querySelectorAll('#bw .psec').forEach(s=>s.style.display='');
+    }
+  });
+  row.appendChild(allPill);
+  // Per-epic pills
+  Object.keys(PROJ).forEach(pn=>{
+    const p=PROJ[pn];
+    const pill=document.createElement('span');
+    pill.className='ep-pill active';
+    pill.style.cssText=`background:${p.bg};color:${p.txt};border-color:${p.dot}44;`;
+    pill.dataset.epic=pn;
+    pill.innerHTML=`<span style="width:7px;height:7px;border-radius:50%;background:${p.dot};flex-shrink:0;display:inline-block;"></span>${pn}`;
+    pill.addEventListener('click',()=>{
+      const isActive=pill.classList.contains('active');
+      pill.classList.toggle('active',!isActive);
+      pill.classList.toggle('inactive',isActive);
+      // Show/hide the matching section
+      document.querySelectorAll('#bw .psec').forEach(s=>{
+        if(s.dataset.epic===pn) s.style.display=isActive?'none':'';
+      });
+      // Sync "All" pill state
+      const anyActive=[...document.querySelectorAll('.ep-pill:not(.ep-pill-all)')].some(p=>p.classList.contains('active'));
+      const allActive=[...document.querySelectorAll('.ep-pill:not(.ep-pill-all)')].every(p=>p.classList.contains('active'));
+      allPill.classList.toggle('active',allActive||anyActive);
+      allPill.classList.toggle('inactive',!anyActive);
+    });
+    row.appendChild(pill);
+  });
+  // ── Collapse All / Expand All button ──
+  const collapseAll=document.createElement('button');
+  collapseAll.style.cssText='margin-left:auto;font-size:11px;font-weight:600;color:var(--t2);background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:4px 12px;cursor:pointer;transition:.15s;white-space:nowrap;';
+  collapseAll.dataset.collapsed='0'; // 0=expanded, 1=collapsed
+  collapseAll.textContent='⊟ Collapse All';
+  collapseAll.addEventListener('click',()=>{
+    const shouldCollapse = collapseAll.dataset.collapsed==='0';
+    // Toggle all boards
+    document.querySelectorAll('#bw .pboard').forEach(b=>{
+      b.classList.toggle('collapsed', shouldCollapse);
+    });
+    // Toggle all per-epic chevrons
+    document.querySelectorAll('#bw .collapse-btn').forEach(b=>{
+      b.textContent = shouldCollapse ? '▸' : '▾';
+      b.title       = shouldCollapse ? 'Expand' : 'Collapse';
+    });
+    // Update button state
+    collapseAll.dataset.collapsed = shouldCollapse ? '1' : '0';
+    collapseAll.textContent       = shouldCollapse ? '⊞ Expand All' : '⊟ Collapse All';
+  });
+  row.appendChild(collapseAll);
+}
+
 function buildSection(pn){
   const p=PROJ[pn];const k=pid(pn);
-  const sec=document.createElement('div');sec.className='psec';
+  const sec=document.createElement('div');sec.className='psec';sec.dataset.epic=pn;
   // header
   const hd=document.createElement('div');hd.className='phead';
+  // collapse button
+  const collapseBtn=document.createElement('button');
+  collapseBtn.className='collapse-btn';collapseBtn.textContent='▾';
+  collapseBtn.title='Collapse / Expand';
   const left=document.createElement('div');left.style.cssText='display:flex;align-items:center;gap:8px;min-width:160px;';
   left.innerHTML=`<span class="ph-dot" style="background:${p.dot};"></span><span class="ph-name">${pn}</span><span class="ph-key">${p.key}</span>`;
   const prog=document.createElement('div');prog.className='ph-prog';
-  prog.innerHTML=`<div class="ph-pwrap"><div class="ph-pfill" id="pf-${k}" style="background:${p.dot};"></div></div><span class="ph-plbl" id="pl-${k}">0/${p.tasks.length}</span>`;
+  prog.innerHTML=`<div class="ph-pwrap"><div class="ph-pfill" id="pf-${k}" style="background:${p.dot};width:0%;"></div></div><span class="ph-plbl" id="pl-${k}">0/${p.tasks.length}</span>`;
   const pills=document.createElement('div');pills.className='ph-pills';
   [...new Set(p.tasks.map(t=>t.assignee))].forEach(m=>{
     const mc=MC[m]||{bg:'#F4F5F7',txt:'#5E6C84'};
@@ -919,7 +985,8 @@ function buildSection(pn){
     pill.addEventListener('click',()=>{mf[pn].has(m)?mf[pn].delete(m):mf[pn].add(m);pill.classList.toggle('off',!mf[pn].has(m));applyFilter(pn);updateCounts(pn);});
     pills.appendChild(pill);
   });
-  hd.appendChild(left);hd.appendChild(prog);hd.appendChild(pills);sec.appendChild(hd);
+  hd.appendChild(collapseBtn);hd.appendChild(left);hd.appendChild(prog);hd.appendChild(pills);
+  sec.appendChild(hd);
   // board
   const board=document.createElement('div');board.className='pboard';
   COLS.forEach(c=>{
@@ -938,6 +1005,22 @@ function buildSection(pn){
     });
     col.appendChild(dz);board.appendChild(col);
     col.querySelector('.c-add').addEventListener('click',()=>openCreate(pn,c.col));
+  });
+  // collapse toggle
+  collapseBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    const isNowCollapsed = board.classList.toggle('collapsed');
+    collapseBtn.textContent = isNowCollapsed ? '▸' : '▾';
+    collapseBtn.title       = isNowCollapsed ? 'Expand' : 'Collapse';
+    // Sync the Collapse All button
+    const caBtn = document.querySelector('#ep-filter-row button');
+    if(caBtn){
+      const anyCollapsed = document.querySelectorAll('#bw .pboard.collapsed').length > 0;
+      const allCollapsed = document.querySelectorAll('#bw .pboard').length ===
+                           document.querySelectorAll('#bw .pboard.collapsed').length;
+      if(allCollapsed){ caBtn.dataset.collapsed='1'; caBtn.textContent='⊞ Expand All'; }
+      else             { caBtn.dataset.collapsed='0'; caBtn.textContent='⊟ Collapse All'; }
+    }
   });
   sec.appendChild(board);
   p.tasks.forEach(t=>{
@@ -976,32 +1059,49 @@ function buildCard(t,pn){
   return d;
 }
 
-function applyFilter(pn){document.querySelectorAll(`.tc[data-proj="${pn}"]`).forEach(c=>c.classList.toggle('hidden',!mf[pn].has(c.dataset.assignee)));}
-function updateCounts(pn){const k=pid(pn);COLS.forEach(c=>{const el=document.getElementById(`cnt-${k}-${c.col}`);if(el)el.textContent=document.querySelectorAll(`.dz[data-col="${c.col}"][data-proj="${pn}"] .tc:not(.hidden)`).length;});}
+function applyFilter(pn){
+  // Safe: iterate all .tc cards and match dataset.proj exactly
+  document.querySelectorAll('.tc').forEach(c=>{
+    if(c.dataset.proj!==pn)return;
+    c.classList.toggle('hidden',!mf[pn].has(c.dataset.assignee));
+  });
+}
+function updateCounts(pn){
+  // DOM-based for filter support (hidden cards excluded)
+  const k=pid(pn);
+  COLS.forEach(c=>{
+    const el=document.getElementById(`cnt-${k}-${c.col}`);
+    if(el) el.textContent=document.querySelectorAll(`.dz[data-col="${c.col}"][data-proj="${pn}"] .tc:not(.hidden)`).length;
+  });
+}
 function updateProgress(pn){
-  const k=pid(pn);const total=PROJ[pn].tasks.length;
-  const done=document.querySelectorAll(`.dz[data-col="done"][data-proj="${pn}"] .tc`).length;
+  // Data-driven — reads tState, not DOM
+  const k=pid(pn);
+  const tasks=PROJ[pn].tasks;
+  const total=tasks.length;
+  const done=tasks.filter(t=>(tState[t.id]||t.col)==='done').length;
   const pct=total?Math.round(done/total*100):0;
-  const f=document.getElementById('pf-'+k);const l=document.getElementById('pl-'+k);
-  if(f)f.style.width=pct+'%';if(l)l.textContent=done+'/'+total;
+  const f=document.getElementById('pf-'+k);
+  const l=document.getElementById('pl-'+k);
+  if(f)f.style.width=pct+'%';
+  if(l)l.textContent=done+'/'+total;
 }
 function updateSprintStats(){
-  const all=allTasks();const doneIds=new Set();
-  document.querySelectorAll('.dz[data-col="done"] .tc').forEach(c=>doneIds.add(c.dataset.id));
-  const total=all.length;const blocked=document.querySelectorAll('.dz[data-col="blocked"] .tc').length;
-  const inprog=document.querySelectorAll('.dz[data-col="inprog"] .tc').length;const done=doneIds.size;
-  const totalSP=all.reduce((s,t)=>s+(t.sp||0),0);const doneSP=all.filter(t=>doneIds.has(t.id)).reduce((s,t)=>s+(t.sp||0),0);
+  // Fully data-driven — never reads DOM card counts
+  const all=allTasks();
+  const total=all.length;
+  const inprog =all.filter(t=>(tState[t.id]||t.col)==='inprog').length;
+  const blocked=all.filter(t=>(tState[t.id]||t.col)==='blocked').length;
+  const done   =all.filter(t=>(tState[t.id]||t.col)==='done').length;
+  const totalSP=all.reduce((s,t)=>s+(t.sp||0),0);
+  const doneSP =all.filter(t=>(tState[t.id]||t.col)==='done').reduce((s,t)=>s+(t.sp||0),0);
   const pct=totalSP?Math.round(doneSP/totalSP*100):0;
-  document.getElementById('st-total').textContent=total;
-  document.getElementById('st-inprog').textContent=inprog;
-  document.getElementById('st-blocked').textContent=blocked;
-  document.getElementById('st-done').textContent=done;
-  document.getElementById('sp-done').textContent=doneSP;
-  document.getElementById('sp-total').textContent=totalSP;
-  document.getElementById('pct-label').textContent=pct+'%';
-  document.getElementById('sprint-fill').style.width=pct+'%';
-  const vc=document.getElementById('vt-committed');const vcp=document.getElementById('vt-completed');const vv=document.getElementById('vt-vel');
-  if(vc)vc.textContent=totalSP;if(vcp)vcp.textContent=doneSP;if(vv)vv.textContent=pct+'%';
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('st-total',total); set('st-inprog',inprog); set('st-blocked',blocked); set('st-done',done);
+  set('sp-done',doneSP); set('sp-total',totalSP); set('pct-label',pct+'%');
+  set('vt-committed',totalSP); set('vt-completed',doneSP); set('vt-vel',pct+'%');
+  const fill=document.getElementById('sprint-fill');
+  if(fill)fill.style.width=pct+'%';
 }
 
 // ═══════════════════════════════════════
@@ -1221,16 +1321,9 @@ const PS_PANELS={
   </div>
   <button class="ps-save" onclick="toast('Settings saved ✓')">Save Changes</button>`,
 
-  members:`<div class="ps-section">
-    <div class="ps-section-title">Team Members (${Object.keys(MC).length})</div>
-    <div class="ps-member-list" id="ps-member-list"></div>
-  </div>`,
+  members:`<div id="ps-members-wrap"></div>`,
 
-  epics:`<div class="ps-section">
-    <div class="ps-section-title">Epics (${Object.keys(PROJ).length})</div>
-    ${Object.keys(PROJ).map(pn=>{const p=PROJ[pn];return`<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#F7F8FA;border-radius:8px;border:1px solid #DDE1E7;margin-bottom:8px;"><span style="width:12px;height:12px;border-radius:3px;background:${p.dot};flex-shrink:0;"></span><span style="font-size:13px;font-weight:600;flex:1;">${pn}</span><span style="font-family:monospace;font-size:11px;color:#8A97A8;background:#ECEEF1;padding:2px 6px;border-radius:4px;">${p.key}</span><span style="font-size:11px;color:#4A5568;">${p.tasks.length} tasks</span></div>`;}).join('')}
-    <button class="ps-save" style="margin-top:8px;" onclick="toast('Epic settings saved ✓')">Save</button>
-  </div>`,
+  epics:`<div id="ps-epics-wrap"></div>`,
 
   notifications:`<div class="ps-section">
     <div class="ps-section-title">Notification Preferences</div>
@@ -1252,17 +1345,105 @@ function renderSettings(panel='general'){
   const content=document.getElementById('ps-content');
   content.innerHTML=PS_PANELS[panel]||'';
   document.querySelectorAll('.ps-nav-item').forEach(n=>n.classList.toggle('act',n.dataset.ps===panel));
+
   if(panel==='members'){
-    const list=document.getElementById('ps-member-list');if(!list)return;
+    const wrap=document.getElementById('ps-members-wrap');if(!wrap)return;
+
+    // ── Member list ──
+    const sec=document.createElement('div');sec.className='ps-section';
+    sec.innerHTML=`<div class="ps-section-title">Team Members (${Object.keys(MC).length})</div>`;
+    const list=document.createElement('div');list.className='ps-member-list';
     Object.keys(MC).forEach(m=>{
       const mc=MC[m];const tasks=allTasks().filter(t=>t.assignee===m).length;
       const row=document.createElement('div');row.className='ps-member-row';
-      row.innerHTML=`<div class="ps-m-av" style="background:${mc.bg};color:${mc.txt};">${m.slice(0,2).toUpperCase()}</div>
-<div><div class="ps-m-name">${m}</div><div class="ps-m-role">Team Member · POS</div></div>
-<span class="ps-m-tasks">${tasks} tasks</span>
-<span class="ps-m-status">Active</span>`;
+      row.innerHTML=`
+        <div class="ps-m-av" style="background:${mc.bg};color:${mc.txt};">${m.slice(0,2).toUpperCase()}</div>
+        <div style="flex:1;"><div class="ps-m-name">${m}</div><div class="ps-m-role">Team Member · POS</div></div>
+        <span class="ps-m-tasks">${tasks} task${tasks!==1?'s':''}</span>
+        <span class="ps-m-status">Active</span>
+        <button data-member="${m}" style="background:transparent;border:1px solid #FFCDD2;color:#D32F2F;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;margin-left:8px;" title="Remove member">✕ Remove</button>`;
+      row.querySelector('button').addEventListener('click',()=>{
+        if(tasks>0){toast(`Cannot remove — ${m} has ${tasks} task(s). Reassign first.`,'error');return;}
+        if(!confirm(`Remove ${m} from the team?`))return;
+        delete MC[m];
+        refreshDropdowns();buildFilterRow();saveState();
+        renderSettings('members');
+        toast(`${m} removed from team`);
+      });
       list.appendChild(row);
     });
+    sec.appendChild(list);
+    wrap.appendChild(sec);
+
+    // ── Add Member form ──
+    const addSec=document.createElement('div');addSec.className='ps-section';
+    addSec.style.marginTop='20px';
+    addSec.innerHTML=`
+      <div class="ps-section-title">Add New Member</div>
+      <div class="ps-row">
+        <div class="ps-field"><label class="ps-label">Full Name <span style="color:var(--red)">*</span></label>
+          <input class="ps-input" id="nm-name" type="text" placeholder="e.g. Ahmed Al-Rashidi"/></div>
+        <div class="ps-field"><label class="ps-label">Role</label>
+          <input class="ps-input" id="nm-role" type="text" placeholder="e.g. Developer"/></div>
+      </div>
+      <div class="ps-row">
+        <div class="ps-field"><label class="ps-label">Avatar Color</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;" id="nm-colors">
+            ${[
+              {bg:'#EEEDFE',txt:'#3C3489'},{bg:'#E6F1FB',txt:'#0C447C'},
+              {bg:'#FAEEDA',txt:'#633806'},{bg:'#EAF3DE',txt:'#27500A'},
+              {bg:'#FCEBEB',txt:'#A32D2D'},{bg:'#FCE4EC',txt:'#880E4F'},
+              {bg:'#E0F7FA',txt:'#004D40'},{bg:'#F3E5F5',txt:'#4A148C'},
+              {bg:'#E3F2FD',txt:'#1565C0'},{bg:'#FFF8E1',txt:'#E65100'},
+            ].map((c,i)=>`<div data-bg="${c.bg}" data-txt="${c.txt}" style="width:28px;height:28px;border-radius:50%;background:${c.bg};border:2px solid ${i===0?c.txt:'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${c.txt};" class="nm-color-swatch ${i===0?'selected':''}">AB</div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <button class="ps-save" id="nm-add-btn" style="margin-top:4px;">+ Add Member</button>`;
+
+    // Color swatch selection
+    addSec.querySelectorAll('.nm-color-swatch').forEach(sw=>{
+      sw.addEventListener('click',()=>{
+        addSec.querySelectorAll('.nm-color-swatch').forEach(s=>{s.style.border='2px solid transparent';s.classList.remove('selected');});
+        sw.style.border=`2px solid ${sw.dataset.txt}`;sw.classList.add('selected');
+        // Update preview text
+        const name=document.getElementById('nm-name').value.trim();
+        sw.textContent=name?name.slice(0,2).toUpperCase():'AB';
+      });
+    });
+    document.getElementById('nm-name')&&document.getElementById('nm-name').addEventListener('input',e=>{
+      const initials=e.target.value.trim().slice(0,2).toUpperCase()||'AB';
+      addSec.querySelectorAll('.nm-color-swatch').forEach(s=>s.textContent=initials);
+    });
+
+    addSec.querySelector('#nm-add-btn').addEventListener('click',()=>{
+      const name=document.getElementById('nm-name').value.trim();
+      if(!name){toast('Name is required','error');return;}
+      if(MC[name]){toast(`${name} already exists`,'error');return;}
+      const sel=addSec.querySelector('.nm-color-swatch.selected')||addSec.querySelector('.nm-color-swatch');
+      MC[name]={bg:sel.dataset.bg,txt:sel.dataset.txt};
+      refreshDropdowns();buildFilterRow();saveState();
+      renderSettings('members');
+      toast(`✓ ${name} added to team`);
+    });
+    wrap.appendChild(addSec);
+  }
+
+  if(panel==='epics'){
+    const wrap=document.getElementById('ps-epics-wrap');if(!wrap)return;
+    const sec=document.createElement('div');sec.className='ps-section';
+    sec.innerHTML=`<div class="ps-section-title">Epics (${Object.keys(PROJ).length})</div>`;
+    Object.keys(PROJ).forEach(pn=>{
+      const p=PROJ[pn];
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 14px;background:#F7F8FA;border-radius:8px;border:1px solid #DDE1E7;margin-bottom:8px;';
+      row.innerHTML=`<span style="width:12px;height:12px;border-radius:3px;background:${p.dot};flex-shrink:0;"></span>
+        <span style="font-size:13px;font-weight:600;flex:1;">${pn}</span>
+        <span style="font-family:monospace;font-size:11px;color:#8A97A8;background:#ECEEF1;padding:2px 6px;border-radius:4px;">${p.key}</span>
+        <span style="font-size:11px;color:#4A5568;">${p.tasks.length} task${p.tasks.length!==1?'s':''}</span>`;
+      sec.appendChild(row);
+    });
+    wrap.appendChild(sec);
   }
 }
 
@@ -1274,6 +1455,7 @@ document.querySelectorAll('.ps-nav-item').forEach(n=>{
 // CREATE TASK MODAL
 // ═══════════════════════════════════════
 function openCreate(proj='',col='backlog'){
+  refreshDropdowns(); // FIX B1+B5: populate dropdowns BEFORE setting values
   ['cm-title','cm-desc'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('cm-proj').value=proj;
   document.getElementById('cm-status').value=col;
@@ -1306,31 +1488,86 @@ function nextId(pn){
 }
 
 document.getElementById('cm-create').addEventListener('click',()=>{
-  const pn=document.getElementById('cm-proj').value;
-  const col=document.getElementById('cm-status').value;
-  const assignee=document.getElementById('cm-assignee').value;
-  const t={
-    id:nextId(pn),
-    title:document.getElementById('cm-title').value.trim(),
-    desc:document.getElementById('cm-desc').value.trim()||'No description.',
-    assignee,priority:document.getElementById('cm-priority').value,
-    col,type:document.getElementById('cm-type').value,
-    sp:parseInt(document.getElementById('cm-sp').value)||3,
-    due:document.getElementById('cm-due').value,
-    comments:[],
-  };
-  PROJ[pn].tasks.push(t);tState[t.id]=col;mf[pn].add(assignee);
-  const zone=document.querySelector(`.dz[data-col="${col}"][data-proj="${pn}"]`);
-  if(zone){
-    const card=buildCard(t,pn);card.style.opacity='0';zone.appendChild(card);
-    requestAnimationFrame(()=>{card.style.transition='opacity .25s';card.style.opacity='1';});
+  const pn       = document.getElementById('cm-proj').value;
+  const col      = document.getElementById('cm-status').value;
+  const assignee = document.getElementById('cm-assignee').value;
+  const title    = document.getElementById('cm-title').value.trim();
+
+  // Guard — button should already be disabled if incomplete, but double-check
+  if(!title||!pn||!assignee){
+    toast('Please fill all required fields','error');
+    return;
   }
-  updateCounts(pn);updateProgress(pn);updateSprintStats();
-  document.getElementById('st-total').textContent=allTasks().length;
-  // refresh backlog if open
-  if(document.getElementById('view-backlog').classList.contains('act')) renderBacklog();
-  toast(`✓ Task "${t.title}" created`);
-  closeCreate();
+  if(!PROJ[pn]){
+    toast('Epic not found — please refresh and try again','error');
+    closeCreate();
+    return;
+  }
+
+  try {
+    // Ensure mf entry exists for dynamically added epics
+    if(!mf[pn]) mf[pn] = new Set(PROJ[pn].tasks.map(t=>t.assignee));
+
+    const t = {
+      id       : nextId(pn),
+      title,
+      desc     : document.getElementById('cm-desc').value.trim() || 'No description.',
+      assignee,
+      priority : document.getElementById('cm-priority').value,
+      col,
+      type     : document.getElementById('cm-type').value,
+      sp       : parseInt(document.getElementById('cm-sp').value) || 3,
+      due      : document.getElementById('cm-due').value,
+      comments : [],
+    };
+
+    PROJ[pn].tasks.push(t);
+    tState[t.id] = col;
+    mf[pn].add(assignee);
+
+    // Safe zone lookup — works even if epic name has apostrophes or quotes
+    const allZones = Array.from(document.querySelectorAll('.dz'));
+    const zone = allZones.find(z => z.dataset.col === col && z.dataset.proj === pn) || null;
+
+    if(zone){
+      const card = buildCard(t, pn);
+      card.style.opacity = '0';
+      zone.appendChild(card);
+
+      // Auto-expand epic if it was collapsed
+      const sec = zone.closest('.psec');
+      if(sec){
+        const board = sec.querySelector('.pboard');
+        if(board && board.classList.contains('collapsed')){
+          board.classList.remove('collapsed');
+          const chevron = sec.querySelector('.collapse-btn');
+          if(chevron){ chevron.textContent='▾'; chevron.title='Collapse'; }
+          // Sync Collapse All button state if all are now expanded
+          const caBtn = document.querySelector('#ep-filter-row button');
+          if(caBtn) caBtn.dataset.collapsed = '0';
+        }
+      }
+      requestAnimationFrame(()=>{
+        card.style.transition = 'opacity .25s, transform .2s';
+        card.style.opacity = '1';
+      });
+      setTimeout(()=>card.scrollIntoView({behavior:'smooth', block:'nearest'}), 150);
+    }
+
+    updateCounts(pn);
+    updateProgress(pn);
+    updateSprintStats();
+    if(document.getElementById('view-backlog').classList.contains('act')) renderBacklog();
+    saveState();
+    toast(`✓ "${t.title}" added to ${pn}`);
+
+  } catch(err) {
+    console.error('[CreateTask]', err);
+    toast('Error creating task: ' + err.message, 'error');
+  } finally {
+    // ALWAYS close the modal — success or error
+    closeCreate();
+  }
 });
 
 document.getElementById('btn-create-top').addEventListener('click',()=>openCreate());
@@ -1655,7 +1892,8 @@ const EPIC_PALETTE=[
   {dot:'#558B2F',bg:'#F1F8E9',txt:'#1B5E20'},
   {dot:'#6D4C41',bg:'#EFEBE9',txt:'#3E2723'},
 ];
-let epicPaletteIdx=Object.keys(PROJ).length;
+// FIX B4: epicPaletteIdx set after loadState in INIT, not here
+let epicPaletteIdx=0;
 
 function ensureEpic(pn){
   if(PROJ[pn])return;
@@ -1674,14 +1912,13 @@ function ensureEpic(pn){
 
 function ensureAssignee(name){
   if(MC[name])return;
-  // pick a color from palette
-  const COLORS=[
+  const ACOLORS=[
     {bg:'#E8EAF6',txt:'#3949AB'},{bg:'#E0F2F1',txt:'#00695C'},
     {bg:'#FFF8E1',txt:'#FF8F00'},{bg:'#F3E5F5',txt:'#7B1FA2'},
     {bg:'#E8F5E9',txt:'#2E7D32'},{bg:'#FBE9E7',txt:'#BF360C'},
     {bg:'#E3F2FD',txt:'#1565C0'},{bg:'#FCE4EC',txt:'#880E4F'},
   ];
-  const c=COLORS[Object.keys(MC).length%COLORS.length];
+  const c=ACOLORS[Object.keys(MC).length%ACOLORS.length]; // FIX B2: dynamic index
   MC[name]={bg:c.bg,txt:c.txt};
 }
 
@@ -1755,6 +1992,10 @@ document.getElementById('bu-import').addEventListener('click',()=>{
   Object.keys(PROJ).forEach(pn=>{updateCounts(pn);updateProgress(pn);});
   updateSprintStats();
   document.getElementById('st-total').textContent=allTasks().length;
+  saveState();
+  refreshDropdowns();
+  buildFilterRow();
+  buildEpicFilter();
 
   // Show result
   const res=document.getElementById('bu-result');res.style.display='';
@@ -1819,14 +2060,117 @@ window.addEventListener('load',()=>{
 });
 
 // ═══════════════════════════════════════
+// PERSISTENCE — localStorage
+// ═══════════════════════════════════════
+const LS_KEY = 'pos_jira_board_v3';
+
+function saveState(){
+  // Sync tState → PROJ task cols before saving
+  Object.keys(PROJ).forEach(pn=>{
+    PROJ[pn].tasks.forEach(t=>{ if(tState[t.id]) t.col=tState[t.id]; });
+  });
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({PROJ, MC}));
+  } catch(e){ console.warn('Board save failed:',e); }
+}
+
+function loadState(){
+  try {
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const data=JSON.parse(raw);
+    if(!data.PROJ || !data.MC) return false;
+    // Wipe defaults, load saved
+    Object.keys(PROJ).forEach(k=>delete PROJ[k]);
+    Object.keys(data.PROJ).forEach(pn=>{ PROJ[pn]=data.PROJ[pn]; });
+    Object.keys(MC).forEach(k=>delete MC[k]);
+    Object.keys(data.MC).forEach(m=>{ MC[m]=data.MC[m]; });
+    return true;
+  } catch(e){ console.warn('Board load failed:',e); return false; }
+}
+
+// ═══════════════════════════════════════
+// DYNAMIC DROPDOWNS
+// ═══════════════════════════════════════
+function refreshDropdowns(){
+  // Epic select in Create modal
+  const cpSel=document.getElementById('cm-proj');
+  if(cpSel){
+    const cur=cpSel.value;
+    cpSel.innerHTML='<option value="">— Select —</option>';
+    Object.keys(PROJ).forEach(pn=>{
+      const o=document.createElement('option');o.value=pn;o.textContent=pn;
+      cpSel.appendChild(o);
+    });
+    if(cur) cpSel.value=cur;
+  }
+  // Assignee select in Create modal
+  const caSel=document.getElementById('cm-assignee');
+  if(caSel){
+    const cur=caSel.value;
+    caSel.innerHTML='<option value="">— Select —</option>';
+    Object.keys(MC).forEach(m=>{
+      const o=document.createElement('option');o.value=m;o.textContent=m;
+      caSel.appendChild(o);
+    });
+    if(cur) caSel.value=cur;
+  }
+  // Assignee filter in Backlog
+  const baSel=document.getElementById('bl-assignee-filter');
+  if(baSel){
+    const cur=baSel.value;
+    baSel.innerHTML='<option value="">All Assignees</option>';
+    Object.keys(MC).forEach(m=>{
+      const o=document.createElement('option');o.value=m;o.textContent=m;
+      baSel.appendChild(o);
+    });
+    if(cur) baSel.value=cur;
+  }
+  // Settings members panel — re-render if open
+  const settingsAct=document.querySelector('.ps-nav-item.act');
+  if(settingsAct && settingsAct.dataset.ps==='members') renderSettings('members');
+}
+
+// ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
+loadState(); // restore from localStorage if available
+
+// FIX B4: set epicPaletteIdx AFTER loadState so it reflects actual loaded epics
+epicPaletteIdx = Object.keys(PROJ).length;
+
+// FIX B6: fully rebuild tState and mf from (possibly restored) PROJ
+Object.keys(tState).forEach(k=>delete tState[k]);
+Object.keys(PROJ).forEach(pn=>{
+  PROJ[pn].tasks.forEach(t=>{ tState[t.id]=t.col; });
+  mf[pn]=new Set(PROJ[pn].tasks.map(t=>t.assignee)); // FIX B6
+});
+
 buildFilterRow();
+refreshDropdowns();
+buildEpicFilter();
+
 const bw=document.getElementById('bw');
-Object.keys(PROJ).forEach(pn=>{bw.appendChild(buildSection(pn));});
-Object.keys(PROJ).forEach(pn=>{updateCounts(pn);updateProgress(pn);});
+Object.keys(PROJ).forEach(pn=>{ bw.appendChild(buildSection(pn)); });
+Object.keys(PROJ).forEach(pn=>{ updateCounts(pn); updateProgress(pn); });
 updateSprintStats();
 renderSettings('general');
+
+// Save hooks — drag-drop, edit-save, delete, bulk-import
+// (create already saves inline; openCreate no longer needs override)
+document.addEventListener('dragend', ()=>saveState());
+document.getElementById('em-save').addEventListener('click',()=>setTimeout(saveState,80));
+document.getElementById('del-confirm').addEventListener('click',()=>setTimeout(saveState,220));
+document.getElementById('bu-import').addEventListener('click',()=>setTimeout(()=>{
+  saveState(); refreshDropdowns(); buildFilterRow();
+},300));
+
+// Expose reset for convenience: type resetBoard() in the browser console
+window.resetBoard=function(){
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+};
+
 </script>
 </body>
 </html>
