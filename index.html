@@ -430,8 +430,14 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
       </select>
       <select class="bl-filter-sel" id="bl-assignee-filter">
         <option value="">All Assignees</option>
-        <option>Ibrahim</option><option>Saad</option><option>Ali</option>
-        <option>Hussain</option><option>Abdulrahman</option>
+        <option>Saad Al-Ghanem</option>
+        <option>Ibrahim Hakami</option>
+        <option>Ali Al-Nakhli</option>
+        <option>Alhussain Al-Hazmi</option>
+        <option>Abdulrahman</option>
+        <option>Abdulelah Alsharif</option>
+        <option>Majed Kurdi</option>
+        <option>Albaraa Alaaullah</option>
       </select>
     </div>
     <div id="bl-epics"></div>
@@ -558,8 +564,14 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
           <label class="cm-lbl">Assignee <span class="req">*</span></label>
           <select class="cm-sel" id="cm-assignee">
             <option value="">— Select —</option>
-            <option>Ibrahim</option><option>Saad</option><option>Ali</option>
-            <option>Hussain</option><option>Abdulrahman</option>
+            <option>Saad Al-Ghanem</option>
+            <option>Ibrahim Hakami</option>
+            <option>Ali Al-Nakhli</option>
+            <option>Alhussain Al-Hazmi</option>
+            <option>Abdulrahman</option>
+            <option>Abdulelah Alsharif</option>
+            <option>Majed Kurdi</option>
+            <option>Albaraa Alaaullah</option>
           </select>
         </div>
         <div class="cm-f">
@@ -735,24 +747,84 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
 // ═══════════════════════════════════════
 const PROJ={
   'Inactive POS':{dot:'#7F77DD',bg:'#EEEDFE',txt:'#3C3489',key:'IPOS',tasks:[
-    {id:'IPOS-1',title:'Inactive Monthly Report',assignee:'Saad',priority:'High',col:'backlog',type:'Story',sp:8,due:'2025-05-10',desc:'Generate and distribute the monthly inactive POS terminal report across all branches.',comments:[{author:'Saad',av:{bg:'#EEEDFE',txt:'#3C3489'},text:'Waiting for data pipeline access.',time:'Apr 2'}]},
-    {id:'IPOS-2',title:'Automation Project',assignee:'Ibrahim',priority:'Medium',col:'inprog',type:'Story',sp:13,due:'2025-06-15',desc:'Automate end-to-end inactive POS detection and reporting via Python scripts.',comments:[{author:'Ibrahim',av:{bg:'#E6F1FB',txt:'#0C447C'},text:'Script 60% done. Pushing to repo Friday.',time:'Apr 5'}]},
+    {id:'IPOS-1',title:'Activation follow up with CM Sales achieve 70%',assignee:'Saad Al-Ghanem',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Follow up with CM Sales team to achieve 70% activation target.',comments:[]},
+    {id:'IPOS-2',title:'Deduct from "Terminal not found" status by batches',assignee:'Saad Al-Ghanem',priority:'Medium',col:'inprog',type:'Task',sp:3,due:'',desc:'Process deductions from Terminal Not Found status in batches.',comments:[]},
+    {id:'IPOS-3',title:'Obtain GTB GH approval for 10K monthly clean up',assignee:'Saad Al-Ghanem',priority:'Medium',col:'inprog',type:'Task',sp:3,due:'',desc:'Get GTB GH approval for the 10K monthly clean up process.',comments:[]},
+    {id:'IPOS-4',title:'Automation inactive POS process',assignee:'Ibrahim Hakami',priority:'Medium',col:'inprog',type:'Task',sp:8,due:'',desc:'Automate the end-to-end inactive POS detection and clean-up process.',comments:[]},
   ]},
   'Branch Pick-up':{dot:'#378ADD',bg:'#E6F1FB',txt:'#0C447C',key:'BP',tasks:[
-    {id:'BP-1',title:'Branch Pick-up Registration',assignee:'Ali',priority:'Medium',col:'backlog',type:'Task',sp:5,due:'2025-05-20',desc:'Design the branch pick-up registration form for the merchant portal.',comments:[]},
-    {id:'BP-2',title:'Automation of Branch Pick-up',assignee:'Ibrahim',priority:'High',col:'blocked',type:'Story',sp:8,due:'2025-04-30',desc:'Automate scheduling and notification flow for branch pick-ups.',comments:[{author:'Ibrahim',av:{bg:'#E6F1FB',txt:'#0C447C'},text:'Blocked — awaiting API credentials from vendor.',time:'Apr 1'},{author:'Hussain',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Escalated to IT. ETA next Tuesday.',time:'Apr 3'}]},
+    {id:'BP-1',title:'Increase number of branches',assignee:'Ali Al-Nakhli',priority:'Medium',col:'inprog',type:'Task',sp:5,due:'',desc:'Expand coverage by increasing the number of participating branches.',comments:[]},
+    {id:'BP-2',title:'Automation process',assignee:'Ibrahim Hakami',priority:'Medium',col:'inprog',type:'Task',sp:8,due:'',desc:'Automate the branch pick-up scheduling and notification flow.',comments:[]},
   ]},
   'IT Projects':{dot:'#BA7517',bg:'#FAEEDA',txt:'#633806',key:'ITP',tasks:[
-    {id:'ITP-1',title:'Merchant Portal',assignee:'Hussain',priority:'High',col:'inprog',type:'Story',sp:13,due:'2025-05-31',desc:'Build the merchant-facing portal for POS management and onboarding.',comments:[{author:'Hussain',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Homepage and dashboard live on staging.',time:'Apr 4'}]},
-    {id:'ITP-2',title:'Alipay Integration',assignee:'Ibrahim',priority:'Medium',col:'backlog',type:'Task',sp:5,due:'2025-06-20',desc:'Integrate Alipay into the POS terminal software.',comments:[]},
-    {id:'ITP-3',title:'Transfile',assignee:'Hussain',priority:'Low',col:'blocked',type:'Bug',sp:3,due:'2025-05-05',desc:'Resolve file-transfer issues in the Transfile batch processing module.',comments:[{author:'Hussain',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Root cause: encoding mismatch on SFTP layer.',time:'Apr 6'}]},
+    {id:'ITP-1',title:'Merchant Portal',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:13,due:'2025-05-31',desc:'Build the merchant-facing web portal for POS management and onboarding.',comments:[{author:'Alhussain Al-Hazmi',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Homepage and dashboard live on staging.',time:'Apr 4'}]},
+    {id:'ITP-2',title:'Alipay+ QR',assignee:'Ibrahim Hakami',priority:'Medium',col:'inprog',type:'Task',sp:5,due:'2025-06-20',desc:'Integrate Alipay+ QR payment method into the POS terminal software.',comments:[]},
+    {id:'ITP-3',title:'Transfile',assignee:'Alhussain Al-Hazmi',priority:'Low',col:'inprog',type:'Task',sp:3,due:'2025-05-05',desc:'Resolve file-transfer issues in the Transfile batch processing module.',comments:[{author:'Alhussain Al-Hazmi',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Root cause: encoding mismatch on SFTP layer.',time:'Apr 6'}]},
+    {id:'ITP-4',title:'JCB',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'JCB payment scheme integration and testing.',comments:[]},
+    {id:'ITP-5',title:'POS Pricing Portal "NOQAT"',assignee:'Ibrahim Hakami',priority:'High',col:'inprog',type:'Task',sp:8,due:'',desc:'Build NOQAT — the POS pricing portal for internal management.',comments:[]},
+    {id:'ITP-6',title:'Suspend/unsuspend terminals',assignee:'Ibrahim Hakami',priority:'High',col:'done',type:'Task',sp:5,due:'',desc:'Implement suspend and unsuspend functionality for POS terminals.',comments:[]},
+    {id:'ITP-7',title:'Data enhancement',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:8,due:'',desc:'Enhance data quality and completeness across POS systems.',comments:[]},
+    {id:'ITP-8',title:'MDQ testing requirement',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Define and execute MDQ testing requirements.',comments:[]},
+    {id:'ITP-9',title:'AFD',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'AFD integration — Base 24 IST currently under testing.',comments:[{author:'Alhussain Al-Hazmi',av:{bg:'#EAF3DE',txt:'#27500A'},text:'Base 24 - IST under testing.',time:'Apr 5'}]},
+    {id:'ITP-10',title:'Force debit',assignee:'Alhussain Al-Hazmi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Implement force debit capability for POS terminals.',comments:[]},
+    {id:'ITP-11',title:'Recon ID',assignee:'Alhussain Al-Hazmi',priority:'High',col:'done',type:'Task',sp:5,due:'',desc:'Reconciliation ID implementation and validation.',comments:[]},
   ]},
   'Profitability':{dot:'#639922',bg:'#EAF3DE',txt:'#27500A',key:'PROF',tasks:[
-    {id:'PROF-1',title:'Profitability Report',assignee:'Abdulrahman',priority:'High',col:'done',type:'Story',sp:8,due:'2025-04-01',desc:'Quarterly POS profitability analysis report for management.',comments:[{author:'Abdulrahman',av:{bg:'#FCEBEB',txt:'#A32D2D'},text:'Report delivered on time. ✅',time:'Apr 1'}]},
+    {id:'PROF-1',title:'Generate report of profitability at customers levels to be shared with Sales',assignee:'Abdulrahman',priority:'High',col:'inprog',type:'Task',sp:8,due:'',desc:'Generate and distribute customer-level profitability reports to the Sales team.',comments:[]},
+    {id:'PROF-2',title:'CE reprice least profitability repricing merchant for CE 5K',assignee:'Abdulelah Alsharif',priority:'Medium',col:'inprog',type:'Task',sp:5,due:'',desc:'Reprice the least profitable merchants for CE 5K segment.',comments:[]},
+    {id:'PROF-3',title:'Create profit and loss dashboard for all CM products',assignee:'Abdulelah Alsharif',priority:'Medium',col:'inprog',type:'Task',sp:8,due:'',desc:'Build a P&L dashboard covering all CM products.',comments:[]},
+    {id:'PROF-4',title:'Enhance transfile automation through EDM',assignee:'Abdulelah Alsharif',priority:'High',col:'done',type:'Task',sp:5,due:'',desc:'Enhance the Transfile automation pipeline using EDM.',comments:[]},
+  ]},
+  'Update Cortex Project':{dot:'#C2185B',bg:'#FCE4EC',txt:'#880E4F',key:'UCP',tasks:[
+    {id:'UCP-1',title:'Matching TMS & Cortex',assignee:'Saad Al-Ghanem',priority:'High',col:'inprog',type:'Task',sp:8,due:'',desc:'Align and match data between TMS and Cortex systems.',comments:[]},
+  ]},
+  'Share Revenue Business Model':{dot:'#00838F',bg:'#E0F7FA',txt:'#004D40',key:'SRBM',tasks:[
+    {id:'SRBM-1',title:'Third Party Dashboard',assignee:'Majed Kurdi',priority:'Medium',col:'inprog',type:'Task',sp:8,due:'',desc:'Build the third-party revenue sharing dashboard.',comments:[]},
+    {id:'SRBM-2',title:'Document sent to Legal - waiting for signing',assignee:'Majed Kurdi',priority:'Medium',col:'blocked',type:'Task',sp:2,due:'',desc:'Legal document sent and pending signature from all parties.',comments:[{author:'Majed Kurdi',av:{bg:'#E0F7FA',txt:'#004D40'},text:'Document sent to Legal — waiting for signing.',time:'Apr 3'}]},
+  ]},
+  'Unsettled Payment':{dot:'#5C6BC0',bg:'#E8EAF6',txt:'#1A237E',key:'UP',tasks:[
+    {id:'UP-1',title:'Pilot phase Live add one more settlement date',assignee:'Alhussain Al-Hazmi',priority:'High',col:'done',type:'Task',sp:5,due:'',desc:'Add an additional settlement date in the pilot phase live environment.',comments:[]},
+  ]},
+  'UPI':{dot:'#F4511E',bg:'#FBE9E7',txt:'#BF360C',key:'UPI',tasks:[
+    {id:'UPI-1',title:'Coordinate with UPI team to fix 30K transactions',assignee:'Ibrahim Hakami',priority:'High',col:'inprog',type:'Task',sp:8,due:'',desc:'Work with the UPI team to investigate and resolve 30K failed transactions.',comments:[]},
+  ]},
+  'Lost/Activity Fees':{dot:'#558B2F',bg:'#F1F8E9',txt:'#1B5E20',key:'LAF',tasks:[
+    {id:'LAF-1',title:'Enable force debit for the inactivity fees promo codes',assignee:'Saad Al-Ghanem',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Last batch for Q1 — remaining for CM. Enable force debit for inactivity fee promo codes.',comments:[{author:'Saad Al-Ghanem',av:{bg:'#EEEDFE',txt:'#3C3489'},text:'Last batch for Q1 - Remaining for CM.',time:'Apr 2'}]},
+  ]},
+  'Internal Audit':{dot:'#6D4C41',bg:'#EFEBE9',txt:'#3E2723',key:'IA',tasks:[
+    {id:'IA-1',title:'Arranging with related teams for the ongoing requests',assignee:'Majed Kurdi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Coordinate with all related teams to fulfill ongoing internal audit requests.',comments:[]},
+    {id:'IA-2',title:'Compliance / Risk observations',assignee:'Majed Kurdi',priority:'High',col:'inprog',type:'Task',sp:5,due:'',desc:'Address and resolve compliance and risk observations raised in the audit.',comments:[]},
+  ]},
+  'POS Budget Plan':{dot:'#00695C',bg:'#E0F2F1',txt:'#004D40',key:'PBP',tasks:[
+    {id:'PBP-1',title:'Get committee update',assignee:'Ali Al-Nakhli',priority:'Medium',col:'inprog',type:'Task',sp:3,due:'',desc:'Obtain the latest budget committee update for POS planning.',comments:[]},
+  ]},
+  'Automate QMR Report':{dot:'#7B1FA2',bg:'#F3E5F5',txt:'#4A148C',key:'AQR',tasks:[
+    {id:'AQR-1',title:'To have a project to automate QMR report',assignee:'Abdulelah Alsharif',priority:'Medium',col:'inprog',type:'Task',sp:8,due:'',desc:'Requirements gathering completed. Initiate project to automate the QMR report.',comments:[{author:'Abdulelah Alsharif',av:{bg:'#FCE4EC',txt:'#880E4F'},text:'Requirements gathering completed.',time:'Apr 4'}]},
+    {id:'AQR-2',title:'Send requirements to project manager',assignee:'Alhussain Al-Hazmi',priority:'Medium',col:'inprog',type:'Task',sp:3,due:'',desc:'Finalize and send the QMR automation requirements document to the project manager.',comments:[]},
+  ]},
+  'TMS II':{dot:'#1565C0',bg:'#E3F2FD',txt:'#0D47A1',key:'TMS',tasks:[
+    {id:'TMS-1',title:'Test out TMS II cases shared by SAMA team',assignee:'Albaraa Alaaullah',priority:'High',col:'blocked',type:'Task',sp:8,due:'',desc:'An issue from SAMA end — waiting to resolve before testing can proceed.',comments:[{author:'Albaraa Alaaullah',av:{bg:'#F3E5F5',txt:'#4A148C'},text:'An issue from SAMA end, waiting to resolve.',time:'Apr 3'}]},
+    {id:'TMS-2',title:'Gather requirements from test cases to be shared with Cortex',assignee:'Ibrahim Hakami',priority:'High',col:'blocked',type:'Task',sp:5,due:'',desc:'Extract and compile requirements from TMS II test cases for Cortex team.',comments:[]},
+    {id:'TMS-3',title:'Send list of users from CM to be shared with SAMA team',assignee:'Ibrahim Hakami',priority:'High',col:'inprog',type:'Task',sp:3,due:'',desc:'Compile and send the CM user list to the SAMA team.',comments:[]},
+  ]},
+  "Domestic Vs Int'l Pricing":{dot:'#BF360C',bg:'#FBE9E7',txt:'#870000',key:'DIP',tasks:[
+    {id:'DIP-1',title:'Ongoing by batches',assignee:'Alhussain Al-Hazmi',priority:'High',col:'done',type:'Task',sp:5,due:'',desc:'Domestic vs International pricing adjustment — ongoing by batches.',comments:[]},
+  ]},
+  'Repricing Batches':{dot:'#FF8F00',bg:'#FFF8E1',txt:'#E65100',key:'RB',tasks:[
+    {id:'RB-1',title:'To have SMS plan',assignee:'Abdulelah Alsharif',priority:'Medium',col:'inprog',type:'Task',sp:3,due:'',desc:'Batch 6 already sent. Create and finalize an SMS communication plan for repricing batches.',comments:[{author:'Abdulelah Alsharif',av:{bg:'#FCE4EC',txt:'#880E4F'},text:'Batch 6 was already sent.',time:'Apr 5'}]},
   ]},
 };
 const PR={High:{bg:'#FFEBE6',txt:'#BF2600'},Medium:{bg:'#FFFAE6',txt:'#974F0C'},Low:{bg:'#F4F5F7',txt:'#5E6C84'}};
-const MC={Saad:{bg:'#EEEDFE',txt:'#3C3489'},Ibrahim:{bg:'#E6F1FB',txt:'#0C447C'},Ali:{bg:'#FAEEDA',txt:'#633806'},Hussain:{bg:'#EAF3DE',txt:'#27500A'},Abdulrahman:{bg:'#FCEBEB',txt:'#A32D2D'}};
+const MC={
+  'Saad Al-Ghanem':    {bg:'#EEEDFE',txt:'#3C3489'},
+  'Ibrahim Hakami':    {bg:'#E6F1FB',txt:'#0C447C'},
+  'Ali Al-Nakhli':     {bg:'#FAEEDA',txt:'#633806'},
+  'Alhussain Al-Hazmi':{bg:'#EAF3DE',txt:'#27500A'},
+  'Abdulrahman':       {bg:'#FCEBEB',txt:'#A32D2D'},
+  'Abdulelah Alsharif':{bg:'#FCE4EC',txt:'#880E4F'},
+  'Majed Kurdi':       {bg:'#E0F7FA',txt:'#004D40'},
+  'Albaraa Alaaullah': {bg:'#F3E5F5',txt:'#4A148C'},
+};
 const COLS=[
   {col:'backlog',label:'Backlog',dot:'#97A0AF',tc:'#5E6C84'},
   {col:'blocked',label:'Hold / Blocked',dot:'#E24B4A',tc:'#A32D2D'},
@@ -807,6 +879,8 @@ document.querySelectorAll('.sb-tab[data-view]').forEach(tab=>{
 // ═══════════════════════════════════════
 function buildFilterRow(){
   const row=document.getElementById('filter-row');
+  // remove old pills, keep the label
+  while(row.children.length>1) row.removeChild(row.lastChild);
   const gm=new Set(allTasks().map(t=>t.assignee));
   [...new Set(allTasks().map(t=>t.assignee))].forEach(m=>{
     const mc=MC[m]||{bg:'#F4F5F7',txt:'#5E6C84'};
@@ -1225,8 +1299,10 @@ function validateCreate(){
 });
 
 function nextId(pn){
-  const nums=PROJ[pn].tasks.map(t=>{const m=t.id.match(/(\d+)$/);return m?parseInt(m[1]):0;});
-  return PROJ[pn].key+'-'+(nums.length?Math.max(...nums)+1:1);
+  const p=PROJ[pn];if(!p)return'T-1';
+  const prefix=p.key||pn.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,5)||'T';
+  const nums=p.tasks.map(t=>{const m=t.id.match(/(\d+)$/);return m?parseInt(m[1]):0;});
+  return prefix+'-'+(nums.length?Math.max(...nums)+1:1);
 }
 
 document.getElementById('cm-create').addEventListener('click',()=>{
@@ -1566,14 +1642,55 @@ function showPreview(rows){
   document.getElementById('bu-import').textContent=`Import ${validCount} Task${validCount!==1?'s':''}`;
 }
 
+// ── Epic auto-color palette for new epics ──
+const EPIC_PALETTE=[
+  {dot:'#7F77DD',bg:'#EEEDFE',txt:'#3C3489'},
+  {dot:'#378ADD',bg:'#E6F1FB',txt:'#0C447C'},
+  {dot:'#BA7517',bg:'#FAEEDA',txt:'#633806'},
+  {dot:'#639922',bg:'#EAF3DE',txt:'#27500A'},
+  {dot:'#C2185B',bg:'#FCE4EC',txt:'#880E4F'},
+  {dot:'#00838F',bg:'#E0F7FA',txt:'#004D40'},
+  {dot:'#5C6BC0',bg:'#E8EAF6',txt:'#1A237E'},
+  {dot:'#F4511E',bg:'#FBE9E7',txt:'#BF360C'},
+  {dot:'#558B2F',bg:'#F1F8E9',txt:'#1B5E20'},
+  {dot:'#6D4C41',bg:'#EFEBE9',txt:'#3E2723'},
+];
+let epicPaletteIdx=Object.keys(PROJ).length;
+
+function ensureEpic(pn){
+  if(PROJ[pn])return;
+  const c=EPIC_PALETTE[epicPaletteIdx%EPIC_PALETTE.length];epicPaletteIdx++;
+  // derive key from first letters of words
+  const key=pn.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,5)||'EP';
+  PROJ[pn]={dot:c.dot,bg:c.bg,txt:c.txt,key,tasks:[]};
+  mf[pn]=new Set();
+  // add board section
+  const bw=document.getElementById('bw');
+  const sec=buildSection(pn);bw.appendChild(sec);
+  updateCounts(pn);updateProgress(pn);
+  // add tab filter pills
+  buildFilterRow(); // refresh — pills may not include new members yet
+}
+
+function ensureAssignee(name){
+  if(MC[name])return;
+  // pick a color from palette
+  const COLORS=[
+    {bg:'#E8EAF6',txt:'#3949AB'},{bg:'#E0F2F1',txt:'#00695C'},
+    {bg:'#FFF8E1',txt:'#FF8F00'},{bg:'#F3E5F5',txt:'#7B1FA2'},
+    {bg:'#E8F5E9',txt:'#2E7D32'},{bg:'#FBE9E7',txt:'#BF360C'},
+    {bg:'#E3F2FD',txt:'#1565C0'},{bg:'#FCE4EC',txt:'#880E4F'},
+  ];
+  const c=COLORS[Object.keys(MC).length%COLORS.length];
+  MC[name]={bg:c.bg,txt:c.txt};
+}
+
 function validateRow(r){
   const errs=[];
-  if(!r.epic) errs.push('epic missing');
-  else if(!VALID_EPICS.includes(r.epic)) errs.push(`unknown epic "${r.epic}"`);
+  if(!r.epic)  errs.push('epic missing');
   if(!r.title) errs.push('title missing');
-  if(r.priority && !VALID_PRIS.includes(r.priority)) errs.push(`invalid priority "${r.priority}"`);
-  if(r.status && !VALID_STATUSES.includes(r.status)) errs.push(`invalid status "${r.status}"`);
-  if(r.assignee && !VALID_ASSIGNS.includes(r.assignee)) errs.push(`unknown assignee "${r.assignee}"`);
+  if(r.status && !VALID_STATUSES.includes(r.status)) errs.push(`invalid status "${r.status}" (use: backlog/blocked/inprog/done)`);
+  // epics and assignees are now auto-created — no longer errors
   return errs;
 }
 
@@ -1582,37 +1699,50 @@ document.getElementById('bu-import').addEventListener('click',()=>{
   const validRows=buParsedRows.filter(r=>validateRow(r).length===0);
   if(!validRows.length){toast('No valid rows to import','error');return;}
 
-  // Handle replace mode
+  // Handle replace mode — clear existing tasks and board cards
   if(mode==='replace'){
     Object.keys(PROJ).forEach(pn=>{
       PROJ[pn].tasks=[];
-      // remove board cards
       document.querySelectorAll(`.tc[data-proj="${pn}"]`).forEach(c=>c.remove());
     });
     Object.keys(tState).forEach(k=>delete tState[k]);
   }
 
+  // Pre-pass: ensure all epics and assignees exist before importing
+  validRows.forEach(r=>{
+    if(r.epic)    ensureEpic(r.epic);
+    if(r.assignee)ensureAssignee(r.assignee);
+  });
+
   const existingIds=new Set(allTasks().map(t=>t.id));
   let imported=0,skipped=0;
 
   validRows.forEach(r=>{
-    const pn=r.epic;const p=PROJ[pn];
+    const pn=r.epic;
     const col=VALID_STATUSES.includes(r.status)?r.status:'backlog';
     const id=r.id||nextId(pn);
     if(mode==='skip_dupes'&&existingIds.has(id)){skipped++;return;}
+    const assignee=r.assignee||'Team';
     const t={
       id, title:r.title,
       desc:r.desc||'Imported from Excel.',
-      assignee:r.assignee||'Ibrahim',
+      assignee,
       priority:VALID_PRIS.includes(r.priority)?r.priority:'Medium',
-      col, type:VALID_TYPES.includes(r.type)?r.type:'Task',
+      col,
+      type:VALID_TYPES.includes(r.type)?r.type:'Task',
       sp:parseInt(r.sp)||3,
       due:r.due||'',
-      comments: r.comment?[{author:r.commentauthor||r.assignee||'Team',av:{bg:'#E6F1FB',txt:'#0C447C'},text:r.comment,time:'Imported'}]:[],
+      comments:r.comment?[{
+        author:r.commentauthor||assignee,
+        av:MC[assignee]||{bg:'#E6F1FB',txt:'#0C447C'},
+        text:r.comment,time:'Imported'
+      }]:[],
     };
-    PROJ[pn].tasks.push(t);tState[t.id]=col;mf[pn].add(t.assignee);
+    PROJ[pn].tasks.push(t);
+    tState[t.id]=col;
+    mf[pn].add(assignee);
     existingIds.add(t.id);
-    // Add card to board if board is rendered
+    // Add card to board
     const zone=document.querySelector(`.dz[data-col="${col}"][data-proj="${pn}"]`);
     if(zone){
       const card=buildCard(t,pn);card.style.opacity='0';zone.appendChild(card);
@@ -1621,17 +1751,18 @@ document.getElementById('bu-import').addEventListener('click',()=>{
     imported++;
   });
 
-  // Refresh all counts
+  // Refresh all counts & stats
   Object.keys(PROJ).forEach(pn=>{updateCounts(pn);updateProgress(pn);});
   updateSprintStats();
   document.getElementById('st-total').textContent=allTasks().length;
 
   // Show result
   const res=document.getElementById('bu-result');res.style.display='';
-  res.style.background=imported>0?'var(--gl)':'#FFF5F5';
-  res.style.border='1px solid '+(imported>0?'var(--g2)':'#FFCDD2');
+  res.style.cssText+='background:'+(imported>0?'var(--gl)':'#FFF5F5')+';border:1px solid '+(imported>0?'var(--g2)':'#FFCDD2')+';border-radius:var(--r6);padding:12px 16px;';
   document.getElementById('bu-result-msg').style.color=imported>0?'var(--gd)':'var(--red)';
-  document.getElementById('bu-result-msg').textContent=imported>0?`✓ Successfully imported ${imported} task${imported!==1?'s':''}`:'No tasks were imported';
+  document.getElementById('bu-result-msg').textContent=imported>0
+    ?`✓ Successfully imported ${imported} task${imported!==1?'s':''}`
+    :'No tasks were imported';
   document.getElementById('bu-result-detail').textContent=[
     imported+' imported',
     skipped?skipped+' skipped (duplicates)':'',
@@ -1640,14 +1771,13 @@ document.getElementById('bu-import').addEventListener('click',()=>{
   document.getElementById('bu-import').disabled=true;
   toast(`✓ ${imported} tasks imported from Excel`);
 
-  // Switch to board view if not already there
-  if(!document.getElementById('view-board').classList.contains('act')){
-    document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('act'));
-    document.querySelector('.sb-tab[data-view="board"]').classList.add('act');
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('act'));
-    document.getElementById('view-board').classList.add('act');
-  }
-  setTimeout(closeBulkUpload, 1800);
+  // Switch to board view
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('act'));
+  document.querySelector('.sb-tab[data-view="board"]').classList.add('act');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('act'));
+  document.getElementById('view-board').classList.add('act');
+
+  setTimeout(closeBulkUpload,1800);
 });
 
 // Download template link — embed as base64 blob
