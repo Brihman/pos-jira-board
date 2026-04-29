@@ -376,6 +376,10 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
   </div>
   <div class="tb-sp"></div>
   <span class="tb-sprint">🗓 Sprint Q2 · Apr–Jun 2025</span>
+  <div id="sync-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;gap:5px;">
+    <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#facc15;flex-shrink:0;"></span>
+    <span id="sync-label">Connecting…</span>
+  </div>
   <div class="tb-av" title="Ibrahim">IB</div>
 </div>
 
@@ -669,6 +673,10 @@ body{font-family:var(--fn);background:var(--bg);color:var(--t);min-height:100vh;
     </div>
   </div>
 </div>
+
+<!-- Firebase Realtime Database SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <!-- SheetJS for Excel parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2060,40 +2068,158 @@ window.addEventListener('load',()=>{
 });
 
 // ═══════════════════════════════════════
-// PERSISTENCE — localStorage
+// FIREBASE REAL-TIME SYNC
 // ═══════════════════════════════════════
-const LS_KEY = 'pos_jira_board_v3';
 
+// ─── Paste your Firebase config here after completing setup ───────────────
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyACgPvrx0YRWsPHrsQbCDqG4fBrWJJ3HsY",
+  authDomain:        "pos-jira-board.firebaseapp.com",
+  databaseURL:       "https://pos-jira-board-default-rtdb.firebaseio.com",
+  projectId:         "pos-jira-board",
+  storageBucket:     "pos-jira-board.firebasestorage.app",
+  messagingSenderId: "368086175346",
+  appId:             "1:368086175346:web:f76b9d1fca4f91c4b6fceb",
+};
+// ─────────────────────────────────────────────────────────────────────────
+
+const LS_KEY     = 'pos_jira_board_v3';
+const DB_PATH    = 'pos_jira_board/v1';
+const SESSION_ID = Date.now()+'-'+Math.random().toString(36).slice(2);
+
+let fbDb = null;
+let fbReady = false;
+let remoteListening = false;
+
+// ── Sync status indicator ──
+function syncStatus(state){
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if(!dot||!lbl) return;
+  const M = {
+    connecting:{c:'#facc15',t:'Connecting…'},
+    online:    {c:'#4ade80',t:'Live Sync ✓'},
+    saving:    {c:'#60a5fa',t:'Saving…'},
+    offline:   {c:'#f87171',t:'Offline – Local Only'},
+    noconfig:  {c:'#94a3b8',t:'Local Only (no sync)'},
+  };
+  const s = M[state]||M.noconfig;
+  dot.style.background = s.c;
+  lbl.textContent = s.t;
+}
+
+// ── Initialize Firebase ──
+function initFirebase(){
+  const isConfigured = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('PASTE');
+  if(!isConfigured){ syncStatus('noconfig'); return; }
+  try {
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    fbReady = true;
+    syncStatus('connecting');
+    fbDb.ref('.info/connected').on('value', s=>{
+      if(s.val()) syncStatus('online'); else syncStatus('offline');
+    });
+    startRemoteListener();
+  } catch(e){
+    console.warn('[Firebase]', e);
+    syncStatus('offline');
+  }
+}
+
+// ── Save to Firebase + localStorage ──
 function saveState(){
-  // Sync tState → PROJ task cols before saving
   Object.keys(PROJ).forEach(pn=>{
-    PROJ[pn].tasks.forEach(t=>{ if(tState[t.id]) t.col=tState[t.id]; });
+    PROJ[pn].tasks.forEach(t=>{ if(tState[t.id]) t.col = tState[t.id]; });
   });
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({PROJ, MC}));
-  } catch(e){ console.warn('Board save failed:',e); }
+  const payload = {PROJ, MC};
+  try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch(e){}
+  if(fbDb && fbReady){
+    syncStatus('saving');
+    fbDb.ref(DB_PATH).set({...payload, _meta:{ts:Date.now(), session:SESSION_ID}})
+      .then(()=>syncStatus('online'))
+      .catch(e=>{ console.warn('[Firebase save]', e); syncStatus('offline'); });
+  }
 }
 
+// ── Load initial state ──
 function loadState(){
+  // 1. Load localStorage for instant first-paint
   try {
-    const raw=localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const data=JSON.parse(raw);
-    if(!data.PROJ || !data.MC) return false;
-    // Wipe defaults, load saved
-    Object.keys(PROJ).forEach(k=>delete PROJ[k]);
-    Object.keys(data.PROJ).forEach(pn=>{ PROJ[pn]=data.PROJ[pn]; });
-    Object.keys(MC).forEach(k=>delete MC[k]);
-    Object.keys(data.MC).forEach(m=>{ MC[m]=data.MC[m]; });
-    return true;
-  } catch(e){ console.warn('Board load failed:',e); return false; }
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d.PROJ && d.MC){ _applyData(d); }
+    }
+  } catch(e){}
+  // 2. If Firebase ready, fetch cloud state (may override local)
+  if(fbDb && fbReady){
+    return fbDb.ref(DB_PATH).once('value').then(snap=>{
+      const d = snap.val();
+      if(d && d.PROJ && d.MC){ _applyData(d); }
+    }).catch(()=>{});
+  }
+  return Promise.resolve();
 }
+
+// ── Apply incoming data to PROJ / MC ──
+function _applyData(d){
+  Object.keys(PROJ).forEach(k=>delete PROJ[k]);
+  Object.keys(d.PROJ).forEach(pn=>{ PROJ[pn]=d.PROJ[pn]; });
+  Object.keys(MC).forEach(k=>delete MC[k]);
+  Object.keys(d.MC).forEach(m=>{ MC[m]=d.MC[m]; });
+  try { localStorage.setItem(LS_KEY, JSON.stringify({PROJ, MC})); } catch(e){}
+}
+
+// ── Real-time remote listener ──
+function startRemoteListener(){
+  if(!fbDb || remoteListening) return;
+  remoteListening = true;
+  fbDb.ref(DB_PATH).on('value', snap=>{
+    const d = snap.val();
+    if(!d || !d.PROJ) return;
+    if(d._meta && d._meta.session === SESSION_ID) return; // skip own changes
+    _applyData(d);
+    rerenderBoard();
+    toast('🔄 Board updated by a team member');
+  });
+}
+
+// ── Full board re-render preserving UI state ──
+function rerenderBoard(){
+  const collapsed = new Set();
+  document.querySelectorAll('#bw .psec').forEach(s=>{
+    const b = s.querySelector('.pboard');
+    if(b && b.classList.contains('collapsed')) collapsed.add(s.dataset.epic);
+  });
+  Object.keys(tState).forEach(k=>delete tState[k]);
+  Object.keys(PROJ).forEach(pn=>{
+    PROJ[pn].tasks.forEach(t=>{ tState[t.id]=t.col; });
+    mf[pn]=new Set(PROJ[pn].tasks.map(t=>t.assignee));
+  });
+  epicPaletteIdx = Object.keys(PROJ).length;
+  const bw = document.getElementById('bw');
+  bw.innerHTML='';
+  Object.keys(PROJ).forEach(pn=>{
+    const sec = buildSection(pn);
+    bw.appendChild(sec);
+    if(collapsed.has(pn)){
+      const b=sec.querySelector('.pboard'); if(b) b.classList.add('collapsed');
+      const btn=sec.querySelector('.collapse-btn'); if(btn){btn.textContent='▸';btn.title='Expand';}
+    }
+    updateCounts(pn); updateProgress(pn);
+  });
+  updateSprintStats();
+  buildFilterRow(); buildEpicFilter(); refreshDropdowns();
+  if(document.getElementById('view-backlog')?.classList.contains('act')) renderBacklog();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 
 // ═══════════════════════════════════════
 // DYNAMIC DROPDOWNS
 // ═══════════════════════════════════════
 function refreshDropdowns(){
-  // Epic select in Create modal
   const cpSel=document.getElementById('cm-proj');
   if(cpSel){
     const cur=cpSel.value;
@@ -2104,7 +2230,6 @@ function refreshDropdowns(){
     });
     if(cur) cpSel.value=cur;
   }
-  // Assignee select in Create modal
   const caSel=document.getElementById('cm-assignee');
   if(caSel){
     const cur=caSel.value;
@@ -2115,7 +2240,6 @@ function refreshDropdowns(){
     });
     if(cur) caSel.value=cur;
   }
-  // Assignee filter in Backlog
   const baSel=document.getElementById('bl-assignee-filter');
   if(baSel){
     const cur=baSel.value;
@@ -2126,7 +2250,6 @@ function refreshDropdowns(){
     });
     if(cur) baSel.value=cur;
   }
-  // Settings members panel — re-render if open
   const settingsAct=document.querySelector('.ps-nav-item.act');
   if(settingsAct && settingsAct.dataset.ps==='members') renderSettings('members');
 }
@@ -2134,40 +2257,36 @@ function refreshDropdowns(){
 // ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
-loadState(); // restore from localStorage if available
+initFirebase(); // Start Firebase (no-op if not configured)
 
-// FIX B4: set epicPaletteIdx AFTER loadState so it reflects actual loaded epics
-epicPaletteIdx = Object.keys(PROJ).length;
-
-// FIX B6: fully rebuild tState and mf from (possibly restored) PROJ
-Object.keys(tState).forEach(k=>delete tState[k]);
-Object.keys(PROJ).forEach(pn=>{
-  PROJ[pn].tasks.forEach(t=>{ tState[t.id]=t.col; });
-  mf[pn]=new Set(PROJ[pn].tasks.map(t=>t.assignee)); // FIX B6
+loadState().then(()=>{
+  epicPaletteIdx = Object.keys(PROJ).length;
+  Object.keys(tState).forEach(k=>delete tState[k]);
+  Object.keys(PROJ).forEach(pn=>{
+    PROJ[pn].tasks.forEach(t=>{ tState[t.id]=t.col; });
+    mf[pn]=new Set(PROJ[pn].tasks.map(t=>t.assignee));
+  });
+  buildFilterRow();
+  refreshDropdowns();
+  buildEpicFilter();
+  const bw=document.getElementById('bw');
+  Object.keys(PROJ).forEach(pn=>{ bw.appendChild(buildSection(pn)); });
+  Object.keys(PROJ).forEach(pn=>{ updateCounts(pn); updateProgress(pn); });
+  updateSprintStats();
+  renderSettings('general');
 });
 
-buildFilterRow();
-refreshDropdowns();
-buildEpicFilter();
-
-const bw=document.getElementById('bw');
-Object.keys(PROJ).forEach(pn=>{ bw.appendChild(buildSection(pn)); });
-Object.keys(PROJ).forEach(pn=>{ updateCounts(pn); updateProgress(pn); });
-updateSprintStats();
-renderSettings('general');
-
-// Save hooks — drag-drop, edit-save, delete, bulk-import
-// (create already saves inline; openCreate no longer needs override)
+// Save hooks
 document.addEventListener('dragend', ()=>saveState());
 document.getElementById('em-save').addEventListener('click',()=>setTimeout(saveState,80));
 document.getElementById('del-confirm').addEventListener('click',()=>setTimeout(saveState,220));
 document.getElementById('bu-import').addEventListener('click',()=>setTimeout(()=>{
-  saveState(); refreshDropdowns(); buildFilterRow();
+  saveState(); refreshDropdowns(); buildFilterRow(); buildEpicFilter();
 },300));
 
-// Expose reset for convenience: type resetBoard() in the browser console
 window.resetBoard=function(){
   localStorage.removeItem(LS_KEY);
+  if(fbDb) fbDb.ref(DB_PATH).remove();
   location.reload();
 };
 
